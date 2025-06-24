@@ -67,7 +67,7 @@ java {
 }
 
 tasks.jar {
-    from("LICENSE") {
+    from("LICENSE.txt") {
         rename { "${it}_${base.archivesName.get()}" }
     }
 }

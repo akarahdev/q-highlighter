@@ -1,4 +1,4 @@
-package dev.akarah.qh.client;
+package dev.akarah.qh.client.net;
 
 import com.mojang.serialization.JsonOps;
 import dev.akarah.qh.packets.C2SMessage;

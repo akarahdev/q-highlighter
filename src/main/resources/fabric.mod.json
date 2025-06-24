@@ -6,7 +6,7 @@
   "description": "A utility mod for foraging parties in Hypixel SkyBlock.",
   "authors": [],
   "contact": {},
-  "license": "Apache-2.0",
+  "license": "GPL-v3",
   "icon": "assets/q-highlighter/icon.png",
   "environment": "*",
   "entrypoints": {

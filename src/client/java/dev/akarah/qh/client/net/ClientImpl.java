@@ -1,4 +1,4 @@
-package dev.akarah.qh.client;
+package dev.akarah.qh.client.net;
 
 import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
@@ -70,5 +70,9 @@ public class ClientImpl extends WebSocketClient {
         Minecraft.getInstance()
                 .player
                 .displayClientMessage(Component.literal(ex.getMessage()), false);
+    }
+
+    public ClientState state() {
+        return this.clientState;
     }
 }
