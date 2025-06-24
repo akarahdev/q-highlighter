@@ -3,6 +3,8 @@ package dev.akarah.qh.client;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import dev.akarah.qh.Util;
 import dev.akarah.qh.client.net.ClientImpl;
+import dev.akarah.qh.client.render.RenderColor;
+import dev.akarah.qh.client.render.RenderTypes;
 import dev.akarah.qh.client.render.RenderUtils;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
@@ -12,6 +14,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.ARGB;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import org.jetbrains.annotations.Nullable;
 
@@ -78,22 +81,24 @@ public class MainClient implements ClientModInitializer {
         }));
 
         WorldRenderEvents.AFTER_ENTITIES.register(ctx -> {
-            if (MainClient.netClient() == null) {
+            if (Minecraft.getInstance().player == null) {
                 return;
             }
+
+            if(MainClient.netClient() == null) {
+                return;
+            }
+
             var state = MainClient.netClient().state();
             for (var entity : ctx.world().entitiesForRendering()) {
                 if (state.groupMembers().contains(entity.getUUID())
                         && Minecraft.getInstance().player != null
                         && !entity.getUUID().equals(Minecraft.getInstance().player.getUUID())) {
-                    RenderUtils.renderShape(
+                    RenderUtils.renderBox(
                             ctx,
-                            Shapes.create(0, 0, 0, 1, entity.getBbHeight(), 1),
-                            RenderType.LINES,
-                            entity.getX() - 0.5,
-                            entity.getY(),
-                            entity.getZ() - 0.5,
-                            ARGB.color(175, 255, 255, 255)
+                            entity.position().add(new Vec3(-0.5, 0, -0.5)),
+                            entity.position().add(new Vec3(0.5, 2, 0.5)),
+                            new RenderColor(100, 255, 255, 0)
                     );
                 }
             }
