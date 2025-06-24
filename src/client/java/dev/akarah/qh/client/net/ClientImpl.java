@@ -1,16 +1,13 @@
 package dev.akarah.qh.client.net;
 
-import com.google.gson.JsonParser;
-import com.mojang.serialization.JsonOps;
+import dev.akarah.qh.Main;
 import dev.akarah.qh.Util;
-import dev.akarah.qh.packets.C2SMessage;
-import dev.akarah.qh.packets.S2CMessage;
-import dev.akarah.qh.packets.c2s.C2SClientDataPacket;
-import dev.akarah.qh.server.S2CEntity;
+import dev.akarah.qh.packets.C2SPacket;
+import dev.akarah.qh.packets.S2CPacket;
 import io.netty.buffer.Unpooled;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import org.java_websocket.WebSocket;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
@@ -36,15 +33,12 @@ public class ClientImpl extends WebSocketClient {
             this.close();
             return;
         }
-        var packet = C2SMessage.of(
-                new C2SClientDataPacket(
-                        player.getGameProfile().getName(),
-                        this.groupName,
-                        player.getGameProfile().getId(),
-                        Util.PROTOCOL_VERSION
-                )
-        );
-        this.entity.writePacket(packet);
+        this.entity.writePacket(new C2SPacket.C2SClientDataPacket(
+                player.getGameProfile().getName(),
+                this.groupName,
+                player.getGameProfile().getId(),
+                Util.PROTOCOL_VERSION
+        ));
     }
 
     @Override
@@ -54,8 +48,11 @@ public class ClientImpl extends WebSocketClient {
 
     @Override
     public void onMessage(ByteBuffer buffer) {
-        var byteBuf = Unpooled.wrappedBuffer(buffer);
-        var packet = S2CMessage.STREAM_CODEC.decode(byteBuf);
+        var byteBuf = new RegistryFriendlyByteBuf(
+                Unpooled.wrappedBuffer(buffer),
+                Main.getRegistryAccess()
+        );
+        var packet = S2CPacket.STREAM_CODEC.decode(byteBuf);
         this.entity.handlePacket(packet);
     }
 

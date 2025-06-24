@@ -1,7 +1,6 @@
 package dev.akarah.qh.server;
 
-import dev.akarah.qh.packets.S2CMessage;
-import dev.akarah.qh.packets.s2c.S2CGroupInfoPacket;
+import dev.akarah.qh.packets.S2CPacket;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -64,9 +63,7 @@ public class ServerState {
 
             var data = entity.clientData();
             if(groupUuids.contains(data.uuid())) {
-                entity.write(S2CMessage.of(
-                        new S2CGroupInfoPacket(groupUuids)
-                ));
+                entity.writePacket(new S2CPacket.S2CGroupInfoPacket(groupUuids));
             }
         }
     }

@@ -26,6 +26,7 @@ loom {
             sourceSet(sourceSets["client"])
         }
     }
+    accessWidenerPath = file("src/main/resources/q-highlighter.accesswidener")
 }
 
 repositories {

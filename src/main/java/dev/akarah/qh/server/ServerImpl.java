@@ -1,12 +1,10 @@
 package dev.akarah.qh.server;
 
-import com.google.gson.JsonParser;
-import com.mojang.serialization.JsonOps;
+import dev.akarah.qh.Main;
 import dev.akarah.qh.Util;
-import dev.akarah.qh.packets.C2SMessage;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
+import dev.akarah.qh.packets.C2SPacket;
 import io.netty.buffer.Unpooled;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
@@ -52,8 +50,11 @@ public class ServerImpl extends WebSocketServer {
 
     @Override
     public void onMessage(WebSocket conn, ByteBuffer buffer) {
-        var byteBuf = Unpooled.wrappedBuffer(buffer);
-        var packet = C2SMessage.STREAM_CODEC.decode(byteBuf);
+        var byteBuf = new RegistryFriendlyByteBuf(
+                Unpooled.wrappedBuffer(buffer),
+                Main.getRegistryAccess()
+        );
+        var packet = C2SPacket.STREAM_CODEC.decode(byteBuf);
         new S2CEntity(conn, this.state).handlePacket(packet);
     }
 
