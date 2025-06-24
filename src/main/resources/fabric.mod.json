@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "q-highlighter",
+  "version": "${version}",
+  "name": "q-highlighter",
+  "description": "A utility mod for foraging parties in Hypixel SkyBlock.",
+  "authors": [],
+  "contact": {},
+  "license": "Apache-2.0",
+  "icon": "assets/q-highlighter/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "dev.akarah.qh.client.MainClient"
+    ],
+    "main": [
+      "dev.akarah.qh.Main"
+    ]
+  },
+  "mixins": [
+    "q-highlighter.mixins.json",
+    {
+      "config": "q-highlighter.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
