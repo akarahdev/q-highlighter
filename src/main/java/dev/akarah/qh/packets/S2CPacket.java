@@ -55,6 +55,22 @@ public sealed interface S2CPacket {
         }
     }
 
+    record ChatMessagePacket(
+            String username,
+            String message
+    ) implements S2CPacket {
+        public static StreamCodec<ByteBuf, ChatMessagePacket> STREAM_CODEC = StreamCodec.composite(
+                ByteBufCodecs.STRING_UTF8, ChatMessagePacket::username,
+                ByteBufCodecs.STRING_UTF8, ChatMessagePacket::message,
+                ChatMessagePacket::new
+        );
+
+        @Override
+        public StreamCodec<ByteBuf, ? extends S2CPacket> streamCodec() {
+            return STREAM_CODEC;
+        }
+    }
+
     static StreamCodec<ByteBuf, ? extends S2CPacket> bootStrap(WritableRegistry<StreamCodec<ByteBuf, ? extends S2CPacket>> registry) {
         registry.register(
                 ResourceKey.create(ExtRegistries.S2C_MESSAGES, ResourceLocation.withDefaultNamespace("group_info")),
@@ -64,6 +80,11 @@ public sealed interface S2CPacket {
         registry.register(
                 ResourceKey.create(ExtRegistries.S2C_MESSAGES, ResourceLocation.withDefaultNamespace("register_waypoint")),
                 RegisterWaypointPacket.STREAM_CODEC,
+                RegistrationInfo.BUILT_IN
+        );
+        registry.register(
+                ResourceKey.create(ExtRegistries.S2C_MESSAGES, ResourceLocation.withDefaultNamespace("chat_message")),
+                ChatMessagePacket.STREAM_CODEC,
                 RegistrationInfo.BUILT_IN
         );
         return GroupInfoPacket.STREAM_CODEC;

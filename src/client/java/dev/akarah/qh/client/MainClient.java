@@ -89,6 +89,18 @@ public class MainClient implements ClientModInitializer {
                                 );
                                 return 0;
                             })
+                    ).then(
+                            ClientCommandManager.literal("chat").then(
+                                    ClientCommandManager.argument("message", StringArgumentType.greedyString()).executes(ctx -> {
+                                        if (MainClient.clientImpl != null) {
+                                            var entity = new C2SEntity(MainClient.clientImpl, MainClient.clientImpl.state());
+                                            entity.writePacket(new C2SPacket.RequestMessage(
+                                                    ctx.getArgument("message", String.class)
+                                            ));
+                                        }
+                                        return 0;
+                                    })
+                            )
                     )
             );
         }));

@@ -58,6 +58,20 @@ public sealed interface C2SPacket {
         }
     }
 
+    record RequestMessage(
+            String message
+    ) implements C2SPacket {
+        public static StreamCodec<ByteBuf, RequestMessage> STREAM_CODEC = StreamCodec.composite(
+                ByteBufCodecs.STRING_UTF8, RequestMessage::message,
+                RequestMessage::new
+        );
+
+        @Override
+        public StreamCodec<ByteBuf, ? extends C2SPacket> streamCodec() {
+            return STREAM_CODEC;
+        }
+    }
+
     static StreamCodec<ByteBuf, ? extends C2SPacket> bootStrap(WritableRegistry<StreamCodec<ByteBuf, ? extends C2SPacket>> registry) {
         registry.register(
                 ResourceKey.create(ExtRegistries.C2S_MESSAGES, ResourceLocation.withDefaultNamespace("client_data")),
@@ -67,6 +81,11 @@ public sealed interface C2SPacket {
         registry.register(
                 ResourceKey.create(ExtRegistries.C2S_MESSAGES, ResourceLocation.withDefaultNamespace("request_waypoint")),
                 RequestWaypoint.STREAM_CODEC,
+                RegistrationInfo.BUILT_IN
+        );
+        registry.register(
+                ResourceKey.create(ExtRegistries.C2S_MESSAGES, ResourceLocation.withDefaultNamespace("request_message")),
+                RequestMessage.STREAM_CODEC,
                 RegistrationInfo.BUILT_IN
         );
         return C2SClientDataPacket.STREAM_CODEC;

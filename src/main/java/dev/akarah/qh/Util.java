@@ -4,8 +4,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class Util {
-    public static int PORT = 25565;
-    public static int PROTOCOL_VERSION = 3;
+    public static int PORT = 21214;
+    public static int PROTOCOL_VERSION = 4;
     public static Logger LOGGER = LogManager.getLogger("qh-server");
 
     public static <T, E extends Exception> T sneakyThrows(Throwing<T, E> supplier) {
