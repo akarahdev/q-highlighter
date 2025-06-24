@@ -37,6 +37,7 @@ dependencies {
     mappings(loom.officialMojangMappings())
     modImplementation("net.fabricmc:fabric-loader:${loader_version}")
     modImplementation("net.fabricmc.fabric-api:fabric-api:${fabric_version}")
+    modImplementation(include("org.java-websocket:Java-WebSocket:1.6.0")!!)
 }
 
 tasks.processResources {
