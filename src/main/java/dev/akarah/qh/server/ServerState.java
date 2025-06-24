@@ -63,7 +63,7 @@ public class ServerState {
 
             var data = entity.clientData();
             if (groupUuids.contains(data.uuid())) {
-                entity.writePacket(new S2CPacket.S2CGroupInfoPacket(groupUuids));
+                entity.writePacket(new S2CPacket.GroupInfoPacket(groupUuids));
             }
         }
     }

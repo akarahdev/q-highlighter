@@ -1,30 +1,43 @@
 package dev.akarah.qh.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import dev.akarah.qh.Util;
+import dev.akarah.qh.client.net.C2SEntity;
 import dev.akarah.qh.client.net.ClientImpl;
 import dev.akarah.qh.client.render.RenderColor;
-import dev.akarah.qh.client.render.RenderTypes;
 import dev.akarah.qh.client.render.RenderUtils;
+import dev.akarah.qh.packets.C2SPacket;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.ARGB;
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.shapes.Shapes;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 import java.net.URI;
+import java.time.Instant;
+import java.util.ArrayList;
 
 public class MainClient implements ClientModInitializer {
     public static @Nullable ClientImpl clientImpl;
+    public static KeyMapping waypointRaytraceKey;
 
     @Override
     public void onInitializeClient() {
+        MainClient.waypointRaytraceKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+                "key.qhighlighter.waypoint.raytrace",
+                InputConstants.Type.KEYSYM,
+                GLFW.GLFW_KEY_V,
+                "category.qhighlighter.waypoint"
+        ));
         ClientCommandRegistrationCallback.EVENT.register(((dispatcher, context) -> {
             dispatcher.register(
                     ClientCommandManager.literal("qh").then(
@@ -81,25 +94,64 @@ public class MainClient implements ClientModInitializer {
         }));
 
         WorldRenderEvents.AFTER_ENTITIES.register(ctx -> {
-            if (Minecraft.getInstance().player == null) {
+            if(clientImpl == null) {
                 return;
             }
-
-            if(MainClient.netClient() == null) {
+            if(Minecraft.getInstance().player == null) {
                 return;
             }
-
-            var state = MainClient.netClient().state();
-            for (var entity : ctx.world().entitiesForRendering()) {
-                if (state.groupMembers().contains(entity.getUUID())
-                        && Minecraft.getInstance().player != null
-                        && !entity.getUUID().equals(Minecraft.getInstance().player.getUUID())) {
+            var p = Minecraft.getInstance().player;
+            synchronized (MainClient.netClient().state().waypoints()) {
+                for(var waypoint : clientImpl.state().waypoints()) {
                     RenderUtils.renderBox(
                             ctx,
-                            entity.position().add(new Vec3(-0.5, 0, -0.5)),
-                            entity.position().add(new Vec3(0.5, 2, 0.5)),
-                            new RenderColor(100, 255, 255, 0)
+                            waypoint.add(-0.5, -0.5, -0.5),
+                            waypoint.add(0.5, 0.5, 0.5),
+                            new RenderColor(200, 255, 0, 0)
                     );
+
+
+                    RenderUtils.renderLine(
+                            ctx,
+                            ctx.gameRenderer().getMainCamera().getPosition()
+                                    .add(Minecraft.getInstance().player.getLookAngle()),
+                            waypoint,
+                            new RenderColor(255, 255, 0, 0)
+                    );
+                }
+                clientImpl.state().waypoints(
+                        new ArrayList<>(
+                                clientImpl.state().waypoints()
+                                        .stream()
+                                        .filter(vec -> {
+                                            var p1 = (Math.abs(p.getX() - vec.x) >= 5) || (Math.abs(p.getZ() - vec.z) >= 5);
+                                            var bp = new BlockPos(
+                                                    (int) vec.x,
+                                                    (int) vec.y,
+                                                    (int) vec.z
+                                            );
+                                            return p1 && isAtSolid(bp);
+                                        })
+                                        .toList()
+                        )
+                );
+            }
+
+        });
+
+        ClientTickEvents.END_CLIENT_TICK.register(minecraft -> {
+            if(minecraft.cameraEntity != null) {
+                while(waypointRaytraceKey.consumeClick()) {
+                    var hit = minecraft.cameraEntity.pick(5000, 1.0f, true);
+                    if (MainClient.netClient() != null && MainClient.netClient().state() != null) {
+                        synchronized (MainClient.netClient().state().waypoints()) {
+                            var entity = new C2SEntity(
+                                    MainClient.netClient(),
+                                    MainClient.netClient().state()
+                            );
+                            entity.writePacket(new C2SPacket.RequestWaypoint(hit.getLocation()));
+                        }
+                    }
                 }
             }
         });
@@ -107,5 +159,20 @@ public class MainClient implements ClientModInitializer {
 
     public static ClientImpl netClient() {
         return MainClient.clientImpl;
+    }
+
+    public boolean isAtSolid(BlockPos bp) {
+        boolean isAir = true;
+        for(int x = -1; x <= 1; x++) {
+            for(int y = -1; y <= 1; y++) {
+                for(int z = -1; z <= 1; z++) {
+                    var mod = bp.offset(x, y, z);
+                    if(Minecraft.getInstance().level != null && !Minecraft.getInstance().level.getBlockState(mod).isAir()) {
+                        isAir = false;
+                    }
+                }
+            }
+        }
+        return !isAir;
     }
 }

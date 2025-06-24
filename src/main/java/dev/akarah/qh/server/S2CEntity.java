@@ -31,6 +31,7 @@ public record S2CEntity(
     public void handlePacket(C2SPacket message) {
         switch (message) {
             case C2SPacket.C2SClientDataPacket c2SClientDataPacket -> handleKnownPacket(c2SClientDataPacket);
+            case C2SPacket.RequestWaypoint requestWaypoint -> handleKnownPacket(requestWaypoint);
         }
     }
 
@@ -38,5 +39,13 @@ public record S2CEntity(
         this.clientData(packet);
         this.server().insertIntoGroup(packet.groupName(), packet.uuid());
         this.server().updateAllGroupInfo();
+    }
+
+    public void handleKnownPacket(C2SPacket.RequestWaypoint packet) {
+        for(var entity : server().server.entities()) {
+            entity.writePacket(
+                    new S2CPacket.RegisterWaypointPacket(this.clientData().username(), packet.waypoint())
+            );
+        }
     }
 }

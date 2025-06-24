@@ -1,14 +1,18 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "dev.akarah.qh.mixin.client",
+  "package": "dev.akarah.qh.client.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
+    "EntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1
   },
   "overwrites": {
     "requireAnnotations": true
-  }
+  },
+  "mixins": [
+    "EntityMixin"
+  ]
 }

@@ -10,6 +10,7 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.UUID;
 import java.util.function.Function;
@@ -43,10 +44,29 @@ public sealed interface C2SPacket {
         }
     }
 
+    record RequestWaypoint(
+            Vec3 waypoint
+    ) implements C2SPacket {
+        public static StreamCodec<ByteBuf, RequestWaypoint> STREAM_CODEC = StreamCodec.composite(
+                Vec3.STREAM_CODEC, RequestWaypoint::waypoint,
+                RequestWaypoint::new
+        );
+
+        @Override
+        public StreamCodec<ByteBuf, ? extends C2SPacket> streamCodec() {
+            return STREAM_CODEC;
+        }
+    }
+
     static StreamCodec<ByteBuf, ? extends C2SPacket> bootStrap(WritableRegistry<StreamCodec<ByteBuf, ? extends C2SPacket>> registry) {
         registry.register(
                 ResourceKey.create(ExtRegistries.C2S_MESSAGES, ResourceLocation.withDefaultNamespace("client_data")),
                 C2SClientDataPacket.STREAM_CODEC,
+                RegistrationInfo.BUILT_IN
+        );
+        registry.register(
+                ResourceKey.create(ExtRegistries.C2S_MESSAGES, ResourceLocation.withDefaultNamespace("request_waypoint")),
+                RequestWaypoint.STREAM_CODEC,
                 RegistrationInfo.BUILT_IN
         );
         return C2SClientDataPacket.STREAM_CODEC;
