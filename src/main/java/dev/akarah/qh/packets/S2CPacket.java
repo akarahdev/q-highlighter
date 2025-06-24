@@ -3,7 +3,6 @@ package dev.akarah.qh.packets;
 import dev.akarah.qh.registry.ExtRegistries;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.RegistrationInfo;
-import net.minecraft.core.Registry;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.WritableRegistry;
 import net.minecraft.network.RegistryFriendlyByteBuf;

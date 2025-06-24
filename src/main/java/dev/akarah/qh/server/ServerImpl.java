@@ -37,7 +37,7 @@ public class ServerImpl extends WebSocketServer {
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
         var entity = new S2CEntity(conn, this.state);
         var data = entity.clientData();
-        if(data == null) {
+        if (data == null) {
             return;
         }
         this.state.removeFromGroup(data.groupName(), data.uuid());

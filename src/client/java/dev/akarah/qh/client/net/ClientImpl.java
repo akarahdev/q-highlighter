@@ -29,7 +29,7 @@ public class ClientImpl extends WebSocketClient {
         System.out.println("Opened!");
 
         var player = Minecraft.getInstance().player;
-        if(player == null) {
+        if (player == null) {
             this.close();
             return;
         }

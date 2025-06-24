@@ -1,6 +1,5 @@
 package dev.akarah.qh.client;
 
-import com.mojang.authlib.minecraft.client.MinecraftClient;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import dev.akarah.qh.Util;
 import dev.akarah.qh.client.net.ClientImpl;
@@ -12,9 +11,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ARGB;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.shapes.Shapes;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,14 +30,14 @@ public class MainClient implements ClientModInitializer {
                                             ClientCommandManager.argument("code", StringArgumentType.string()).executes(ctx -> {
                                                 var uri = ctx.getArgument("uri", String.class);
                                                 var code = ctx.getArgument("code", String.class);
-                                                if(!uri.contains(":")) {
+                                                if (!uri.contains(":")) {
                                                     uri += ":" + Util.PORT;
                                                 }
                                                 var address = URI.create("ws://" + uri);
 
                                                 String finalUri = uri;
                                                 Thread.startVirtualThread(() -> {
-                                                    if(MainClient.clientImpl != null) {
+                                                    if (MainClient.clientImpl != null) {
                                                         ctx.getSource().sendFeedback(Component.literal("Disconnecting from old server..."));
                                                         MainClient.clientImpl.close();
                                                     }
@@ -49,7 +46,7 @@ public class MainClient implements ClientModInitializer {
                                                     Thread.startVirtualThread(() -> {
                                                         MainClient.clientImpl = new ClientImpl(address, code);
                                                         try {
-                                                            if(MainClient.clientImpl.connectBlocking()) {
+                                                            if (MainClient.clientImpl.connectBlocking()) {
                                                                 ctx.getSource().sendFeedback(Component.literal("Connected to " + finalUri + "!"));
                                                             } else {
                                                                 ctx.getSource().sendFeedback(Component.literal("Failed to connect to " + finalUri + "."));
@@ -67,7 +64,7 @@ public class MainClient implements ClientModInitializer {
                             )
                     ).then(
                             ClientCommandManager.literal("list").executes(ctx -> {
-                                if(MainClient.clientImpl == null) {
+                                if (MainClient.clientImpl == null) {
                                     ctx.getSource().sendError(Component.literal("nuh uh!!! LLLL"));
                                     return 1;
                                 }
@@ -81,23 +78,23 @@ public class MainClient implements ClientModInitializer {
         }));
 
         WorldRenderEvents.AFTER_ENTITIES.register(ctx -> {
-            if(MainClient.netClient() == null) {
+            if (MainClient.netClient() == null) {
                 return;
             }
             var state = MainClient.netClient().state();
-            for(var entity : ctx.world().entitiesForRendering()) {
-                if(state.groupMembers().contains(entity.getUUID())
-                    && Minecraft.getInstance().player != null
-                    && !entity.getUUID().equals(Minecraft.getInstance().player.getUUID())) {
-                        RenderUtils.renderShape(
-                                ctx,
-                                Shapes.create(0, 0, 0, 1, entity.getBbHeight(), 1),
-                                RenderType.LINES,
-                                entity.getX() - 0.5,
-                                entity.getY(),
-                                entity.getZ() - 0.5,
-                                ARGB.color(175, 255, 255, 255)
-                        );
+            for (var entity : ctx.world().entitiesForRendering()) {
+                if (state.groupMembers().contains(entity.getUUID())
+                        && Minecraft.getInstance().player != null
+                        && !entity.getUUID().equals(Minecraft.getInstance().player.getUUID())) {
+                    RenderUtils.renderShape(
+                            ctx,
+                            Shapes.create(0, 0, 0, 1, entity.getBbHeight(), 1),
+                            RenderType.LINES,
+                            entity.getX() - 0.5,
+                            entity.getY(),
+                            entity.getZ() - 0.5,
+                            ARGB.color(175, 255, 255, 255)
+                    );
                 }
             }
         });

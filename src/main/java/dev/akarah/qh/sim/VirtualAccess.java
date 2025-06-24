@@ -13,10 +13,10 @@ public class VirtualAccess implements RegistryAccess {
     @Override
     @SuppressWarnings("unchecked")
     public <E> Optional<Registry<E>> lookup(ResourceKey<? extends Registry<? extends E>> resourceKey) {
-        if(resourceKey.equals(ExtRegistries.S2C_MESSAGES)) {
+        if (resourceKey.equals(ExtRegistries.S2C_MESSAGES)) {
             return Optional.of((Registry<E>) ExtBuiltInRegistries.S2C_MESSAGES);
         }
-        if(resourceKey.equals(ExtRegistries.C2S_MESSAGES)) {
+        if (resourceKey.equals(ExtRegistries.C2S_MESSAGES)) {
             return Optional.of((Registry<E>) ExtBuiltInRegistries.C2S_MESSAGES);
         }
         return Optional.empty();

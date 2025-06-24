@@ -9,7 +9,7 @@ public class Main implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        ACCESS.bootStrap();
+        VirtualAccess.bootStrap();
     }
 
     public static RegistryAccess getRegistryAccess() {

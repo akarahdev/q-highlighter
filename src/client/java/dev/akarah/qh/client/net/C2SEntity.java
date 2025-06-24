@@ -4,11 +4,8 @@ import dev.akarah.qh.Main;
 import dev.akarah.qh.packets.C2SPacket;
 import dev.akarah.qh.packets.S2CPacket;
 import io.netty.buffer.Unpooled;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import org.java_websocket.WebSocket;
-
-import java.util.Arrays;
 
 public record C2SEntity(
         WebSocket conn,

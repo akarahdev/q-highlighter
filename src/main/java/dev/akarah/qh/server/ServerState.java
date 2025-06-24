@@ -14,7 +14,7 @@ public class ServerState {
     Map<String, Set<UUID>> groups = new HashMap<>();
 
     public Set<UUID> getGroup(String name) {
-        if(!groups.containsKey(name)) {
+        if (!groups.containsKey(name)) {
             setGroup(name, new HashSet<>());
         }
         return groups.get(name);
@@ -26,7 +26,7 @@ public class ServerState {
 
     public void removeFromGroup(String name, UUID uuid) {
         getGroup(name).remove(uuid);
-        if(getGroup(name).isEmpty()) {
+        if (getGroup(name).isEmpty()) {
             this.groups.remove(name);
         }
     }
@@ -36,7 +36,7 @@ public class ServerState {
     }
 
     public void updateAllGroupInfo() {
-        for(var group : this.groups.keySet()) {
+        for (var group : this.groups.keySet()) {
             updateGroupInfoForGroup(group);
         }
     }
@@ -46,23 +46,23 @@ public class ServerState {
         var groupUuids = this.server.entities()
                 .stream()
                 .flatMap(x -> {
-                    if(x.clientData() == null) {
+                    if (x.clientData() == null) {
                         System.out.println("Skipping client " + x.conn());
                         return Stream.empty();
                     }
-                    if(!x.clientData().groupName().equals(name)) {
+                    if (!x.clientData().groupName().equals(name)) {
                         return Stream.empty();
                     }
                     return Stream.of(x.clientData().uuid());
                 })
                 .toList();
-        for(var entity : entities) {
-            if(entity.clientData() == null) {
+        for (var entity : entities) {
+            if (entity.clientData() == null) {
                 continue;
             }
 
             var data = entity.clientData();
-            if(groupUuids.contains(data.uuid())) {
+            if (groupUuids.contains(data.uuid())) {
                 entity.writePacket(new S2CPacket.S2CGroupInfoPacket(groupUuids));
             }
         }
