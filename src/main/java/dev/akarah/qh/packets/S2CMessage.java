@@ -5,6 +5,9 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.akarah.qh.packets.c2s.C2SClientDataPacket;
 import dev.akarah.qh.packets.s2c.S2CGroupInfoPacket;
 import dev.akarah.qh.server.S2CEntity;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 
 import java.util.Optional;
 
@@ -23,7 +26,8 @@ public record S2CMessage(
         );
     }
 
-    public static Codec<S2CMessage> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            S2CGroupInfoPacket.CODEC.optionalFieldOf("group_info").forGetter(S2CMessage::groupInfo)
-    ).apply(instance, S2CMessage::new));
+    public static StreamCodec<ByteBuf, S2CMessage> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.optional(S2CGroupInfoPacket.STREAM_CODEC), S2CMessage::groupInfo,
+            S2CMessage::new
+    );
 }

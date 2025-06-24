@@ -6,12 +6,16 @@ import dev.akarah.qh.Util;
 import dev.akarah.qh.packets.C2SMessage;
 import dev.akarah.qh.packets.S2CMessage;
 import dev.akarah.qh.packets.c2s.C2SClientDataPacket;
+import dev.akarah.qh.server.S2CEntity;
+import io.netty.buffer.Unpooled;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+import org.java_websocket.WebSocket;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
 import java.net.URI;
+import java.nio.ByteBuffer;
 
 public class ClientImpl extends WebSocketClient {
     ClientState clientState = new ClientState();
@@ -45,16 +49,14 @@ public class ClientImpl extends WebSocketClient {
 
     @Override
     public void onMessage(String message) {
-        System.out.println("recv << " + message);
-        try {
-            var json = JsonParser.parseString(message);
-            var packet = S2CMessage.CODEC.decode(JsonOps.INSTANCE, json)
-                    .getOrThrow()
-                    .getFirst();
-            this.entity.handlePacket(packet);
-        } catch (Exception ignored) {
 
-        }
+    }
+
+    @Override
+    public void onMessage(ByteBuffer buffer) {
+        var byteBuf = Unpooled.wrappedBuffer(buffer);
+        var packet = S2CMessage.STREAM_CODEC.decode(byteBuf);
+        this.entity.handlePacket(packet);
     }
 
     @Override

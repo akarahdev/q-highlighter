@@ -4,6 +4,9 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.akarah.qh.packets.c2s.C2SClientDataPacket;
 import dev.akarah.qh.server.S2CEntity;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 
 import java.util.Optional;
 
@@ -22,7 +25,8 @@ public record C2SMessage(
         );
     }
 
-    public static Codec<C2SMessage> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            C2SClientDataPacket.CODEC.optionalFieldOf("client_data").forGetter(C2SMessage::clientData)
-    ).apply(instance, C2SMessage::new));
+    public static StreamCodec<ByteBuf, C2SMessage> STREAM_CODEC = StreamCodec.composite(
+        ByteBufCodecs.optional(C2SClientDataPacket.STREAM_CODEC), C2SMessage::clientData,
+        C2SMessage::new
+    );
 }

@@ -4,6 +4,7 @@ import com.mojang.serialization.JsonOps;
 import dev.akarah.qh.packets.C2SMessage;
 import dev.akarah.qh.packets.S2CMessage;
 import dev.akarah.qh.packets.c2s.C2SClientDataPacket;
+import io.netty.buffer.Unpooled;
 import org.java_websocket.WebSocket;
 
 public record S2CEntity(
@@ -11,9 +12,9 @@ public record S2CEntity(
         ServerState server
 ) {
     public void write(S2CMessage message) {
-        System.out.println(this.conn.getAttachment() + " << " + message);
-        var json = S2CMessage.CODEC.encodeStart(JsonOps.INSTANCE, message).getOrThrow();
-        Thread.startVirtualThread(() -> this.conn.send(json.toString()));
+        var buf = Unpooled.buffer();
+        S2CMessage.STREAM_CODEC.encode(buf, message);
+        Thread.startVirtualThread(() -> this.conn.send(buf.nioBuffer()));
     }
 
     public void clientData(C2SClientDataPacket packet) {

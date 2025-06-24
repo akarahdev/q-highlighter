@@ -5,7 +5,7 @@ import org.apache.logging.log4j.Logger;
 
 public class Util {
     public static int PORT = 25565;
-    public static int PROTOCOL_VERSION = 1;
+    public static int PROTOCOL_VERSION = 2;
     public static Logger LOGGER = LogManager.getLogger("qh-server");
 
     public interface Throwing<T, E extends Exception> {

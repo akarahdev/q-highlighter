@@ -4,6 +4,9 @@ import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
 import dev.akarah.qh.Util;
 import dev.akarah.qh.packets.C2SMessage;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
+import io.netty.buffer.Unpooled;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
@@ -11,6 +14,7 @@ import org.java_websocket.server.WebSocketServer;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.util.List;
 
 public class ServerImpl extends WebSocketServer {
@@ -43,16 +47,14 @@ public class ServerImpl extends WebSocketServer {
 
     @Override
     public void onMessage(WebSocket conn, String message) {
-        System.out.println(conn.getAttachment() + " >> " + message);
-        try {
-            var json = JsonParser.parseString(message);
-            System.out.println(json);
-            var packet = C2SMessage.CODEC.decode(JsonOps.INSTANCE, json).getOrThrow().getFirst();
-            System.out.println(packet);
-            new S2CEntity(conn, this.state).handlePacket(packet);
-        } catch (Exception ignored) {
 
-        }
+    }
+
+    @Override
+    public void onMessage(WebSocket conn, ByteBuffer buffer) {
+        var byteBuf = Unpooled.wrappedBuffer(buffer);
+        var packet = C2SMessage.STREAM_CODEC.decode(byteBuf);
+        new S2CEntity(conn, this.state).handlePacket(packet);
     }
 
     @Override
