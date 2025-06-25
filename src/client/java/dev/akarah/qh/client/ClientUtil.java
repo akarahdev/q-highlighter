@@ -3,6 +3,8 @@ package dev.akarah.qh.client;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.debug.DebugRenderer;
 import net.minecraft.world.level.Level;
 
 import java.util.Optional;

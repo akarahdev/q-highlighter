@@ -2,6 +2,7 @@ package dev.akarah.qh.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import dev.akarah.qh.client.data.SweepData;
 import dev.akarah.qh.client.net.ClientImpl;
 import dev.akarah.qh.client.render.RenderColor;
 import dev.akarah.qh.client.render.RenderUtils;
@@ -13,10 +14,13 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
@@ -28,6 +32,12 @@ import java.util.Optional;
 public class MainClient implements ClientModInitializer {
     public static @Nullable ClientImpl clientImpl;
     public static KeyMapping waypointRaytraceKey;
+    public static SweepData SWEEP_DATA = new SweepData(
+            new SweepData.BaseValues(0.0, 0.0),
+            Optional.empty(),
+            Optional.empty(),
+            0.0
+    );
 
     @Override
     public void onInitializeClient() {
@@ -149,6 +159,14 @@ public class MainClient implements ClientModInitializer {
                 }
             }
         });
+
+        HudElementRegistry.attachElementBefore(
+                VanillaHudElements.CHAT,
+                ResourceLocation.parse("qhighlighter:e"),
+                (context, tickCounter) -> {
+                    MainClient.sweepData().render(context, tickCounter);
+                }
+        );
     }
 
     public static Optional<ClientImpl> netClient() {
@@ -168,5 +186,13 @@ public class MainClient implements ClientModInitializer {
             }
         }
         return !isAir;
+    }
+
+    public static SweepData sweepData() {
+        return SWEEP_DATA;
+    }
+
+    public static void sweepData(SweepData data) {
+        SWEEP_DATA = data;
     }
 }
