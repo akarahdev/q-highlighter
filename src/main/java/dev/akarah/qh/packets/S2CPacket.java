@@ -1,7 +1,6 @@
 package dev.akarah.qh.packets;
 
 import dev.akarah.qh.registry.ExtRegistries;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.core.RegistrationInfo;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.WritableRegistry;
@@ -17,7 +16,7 @@ import java.util.UUID;
 import java.util.function.Function;
 
 public sealed interface S2CPacket {
-    StreamCodec<ByteBuf, ? extends S2CPacket> streamCodec();
+    StreamCodec<RegistryFriendlyByteBuf, ? extends S2CPacket> streamCodec();
 
     StreamCodec<RegistryFriendlyByteBuf, S2CPacket> STREAM_CODEC =
             ByteBufCodecs.registry(ExtRegistries.S2C_MESSAGES).dispatch(
@@ -26,15 +25,15 @@ public sealed interface S2CPacket {
             );
 
     record GroupInfoPacket(
-            List<UUID> clients
+            List<GroupMember> clients
     ) implements S2CPacket {
-        public static StreamCodec<ByteBuf, GroupInfoPacket> STREAM_CODEC = StreamCodec.composite(
-                UUIDUtil.STREAM_CODEC.apply(ByteBufCodecs.list()), GroupInfoPacket::clients,
+        public static StreamCodec<RegistryFriendlyByteBuf, GroupInfoPacket> STREAM_CODEC = StreamCodec.composite(
+                GroupMember.STREAM_CODEC.apply(ByteBufCodecs.list()), GroupInfoPacket::clients,
                 GroupInfoPacket::new
         );
 
         @Override
-        public StreamCodec<ByteBuf, ? extends S2CPacket> streamCodec() {
+        public StreamCodec<RegistryFriendlyByteBuf, ? extends S2CPacket> streamCodec() {
             return STREAM_CODEC;
         }
     }
@@ -43,14 +42,14 @@ public sealed interface S2CPacket {
             String registrar,
             Vec3 waypoint
     ) implements S2CPacket {
-        public static StreamCodec<ByteBuf, RegisterWaypointPacket> STREAM_CODEC = StreamCodec.composite(
+        public static StreamCodec<RegistryFriendlyByteBuf, RegisterWaypointPacket> STREAM_CODEC = StreamCodec.composite(
                 ByteBufCodecs.STRING_UTF8, RegisterWaypointPacket::registrar,
                 Vec3.STREAM_CODEC, RegisterWaypointPacket::waypoint,
                 RegisterWaypointPacket::new
         );
 
         @Override
-        public StreamCodec<ByteBuf, ? extends S2CPacket> streamCodec() {
+        public StreamCodec<RegistryFriendlyByteBuf, ? extends S2CPacket> streamCodec() {
             return STREAM_CODEC;
         }
     }
@@ -59,19 +58,19 @@ public sealed interface S2CPacket {
             String username,
             String message
     ) implements S2CPacket {
-        public static StreamCodec<ByteBuf, ChatMessagePacket> STREAM_CODEC = StreamCodec.composite(
+        public static StreamCodec<RegistryFriendlyByteBuf, ChatMessagePacket> STREAM_CODEC = StreamCodec.composite(
                 ByteBufCodecs.STRING_UTF8, ChatMessagePacket::username,
                 ByteBufCodecs.STRING_UTF8, ChatMessagePacket::message,
                 ChatMessagePacket::new
         );
 
         @Override
-        public StreamCodec<ByteBuf, ? extends S2CPacket> streamCodec() {
+        public StreamCodec<RegistryFriendlyByteBuf, ? extends S2CPacket> streamCodec() {
             return STREAM_CODEC;
         }
     }
 
-    static StreamCodec<ByteBuf, ? extends S2CPacket> bootStrap(WritableRegistry<StreamCodec<ByteBuf, ? extends S2CPacket>> registry) {
+    static StreamCodec<RegistryFriendlyByteBuf, ? extends S2CPacket> bootStrap(WritableRegistry<StreamCodec<RegistryFriendlyByteBuf, ? extends S2CPacket>> registry) {
         registry.register(
                 ResourceKey.create(ExtRegistries.S2C_MESSAGES, ResourceLocation.withDefaultNamespace("group_info")),
                 GroupInfoPacket.STREAM_CODEC,

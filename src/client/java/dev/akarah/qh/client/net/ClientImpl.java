@@ -1,6 +1,8 @@
 package dev.akarah.qh.client.net;
 
 import dev.akarah.qh.Main;
+import dev.akarah.qh.packets.GroupMember;
+import dev.akarah.qh.packets.MemberStatus;
 import dev.akarah.qh.util.Util;
 import dev.akarah.qh.packets.C2SPacket;
 import dev.akarah.qh.packets.S2CPacket;
@@ -8,11 +10,13 @@ import io.netty.buffer.Unpooled;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
 import java.net.URI;
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.Optional;
 
 public class ClientImpl extends WebSocketClient {
@@ -39,9 +43,12 @@ public class ClientImpl extends WebSocketClient {
             return;
         }
         this.entity.writePacket(new C2SPacket.C2SClientDataPacket(
-                player.getGameProfile().getName(),
+                new GroupMember(
+                        player.getGameProfile().getName(),
+                        player.getGameProfile().getId(),
+                        Optional.empty()
+                ),
                 this.groupName,
-                player.getGameProfile().getId(),
                 Util.PROTOCOL_VERSION
         ));
     }

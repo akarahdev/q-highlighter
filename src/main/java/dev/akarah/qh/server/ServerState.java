@@ -1,5 +1,6 @@
 package dev.akarah.qh.server;
 
+import dev.akarah.qh.packets.GroupMember;
 import dev.akarah.qh.packets.S2CPacket;
 
 import java.util.*;
@@ -11,27 +12,27 @@ public class ServerState {
     }
 
     ServerImpl server;
-    Map<String, Set<UUID>> groups = new HashMap<>();
+    Map<String, Set<GroupMember>> groups = new HashMap<>();
 
-    public Set<UUID> getGroup(String name) {
+    public Set<GroupMember> getGroup(String name) {
         if (!groups.containsKey(name)) {
             setGroup(name, new HashSet<>());
         }
         return groups.get(name);
     }
 
-    public void insertIntoGroup(String name, UUID uuid) {
+    public void insertIntoGroup(String name, GroupMember uuid) {
         getGroup(name).add(uuid);
     }
 
-    public void removeFromGroup(String name, UUID uuid) {
+    public void removeFromGroup(String name, GroupMember uuid) {
         getGroup(name).remove(uuid);
         if (getGroup(name).isEmpty()) {
             this.groups.remove(name);
         }
     }
 
-    public void setGroup(String name, Set<UUID> uuids) {
+    public void setGroup(String name, Set<GroupMember> uuids) {
         this.groups.put(name, uuids);
     }
 
@@ -43,7 +44,7 @@ public class ServerState {
 
     public void updateGroupInfoForGroup(String name) {
         var entities = this.server.entities();
-        var groupUuids = this.server.entities()
+        var groupDataList = this.server.entities()
                 .stream()
                 .flatMap(x -> {
                     if (x.clientData() == null) {
@@ -53,7 +54,7 @@ public class ServerState {
                     if (!x.clientData().groupName().equals(name)) {
                         return Stream.empty();
                     }
-                    return Stream.of(x.clientData().uuid());
+                    return Stream.of(x.clientData().memberData());
                 })
                 .toList();
         for (var entity : entities) {
@@ -62,8 +63,8 @@ public class ServerState {
             }
 
             var data = entity.clientData();
-            if (groupUuids.contains(data.uuid())) {
-                entity.writePacket(new S2CPacket.GroupInfoPacket(groupUuids));
+            if (groupDataList.contains(data.memberData())) {
+                entity.writePacket(new S2CPacket.GroupInfoPacket(groupDataList));
             }
         }
     }

@@ -1,9 +1,7 @@
 package dev.akarah.qh.packets;
 
 import dev.akarah.qh.registry.ExtRegistries;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.core.RegistrationInfo;
-import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.WritableRegistry;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -12,11 +10,10 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.UUID;
 import java.util.function.Function;
 
 public sealed interface C2SPacket {
-    StreamCodec<ByteBuf, ? extends C2SPacket> streamCodec();
+    StreamCodec<RegistryFriendlyByteBuf, ? extends C2SPacket> streamCodec();
 
     StreamCodec<RegistryFriendlyByteBuf, C2SPacket> STREAM_CODEC =
             ByteBufCodecs.registry(ExtRegistries.C2S_MESSAGES).dispatch(
@@ -25,21 +22,19 @@ public sealed interface C2SPacket {
             );
 
     record C2SClientDataPacket(
-            String username,
+            GroupMember memberData,
             String groupName,
-            UUID uuid,
             int protocolVersion
     ) implements C2SPacket {
-        public static StreamCodec<ByteBuf, C2SClientDataPacket> STREAM_CODEC = StreamCodec.composite(
-                ByteBufCodecs.STRING_UTF8, C2SClientDataPacket::username,
+        public static StreamCodec<RegistryFriendlyByteBuf, C2SClientDataPacket> STREAM_CODEC = StreamCodec.composite(
+                GroupMember.STREAM_CODEC, C2SClientDataPacket::memberData,
                 ByteBufCodecs.STRING_UTF8, C2SClientDataPacket::groupName,
-                UUIDUtil.STREAM_CODEC, C2SClientDataPacket::uuid,
                 ByteBufCodecs.VAR_INT, C2SClientDataPacket::protocolVersion,
                 C2SClientDataPacket::new
         );
 
         @Override
-        public StreamCodec<ByteBuf, ? extends C2SPacket> streamCodec() {
+        public StreamCodec<RegistryFriendlyByteBuf, ? extends C2SPacket> streamCodec() {
             return STREAM_CODEC;
         }
     }
@@ -47,13 +42,13 @@ public sealed interface C2SPacket {
     record RequestWaypoint(
             Vec3 waypoint
     ) implements C2SPacket {
-        public static StreamCodec<ByteBuf, RequestWaypoint> STREAM_CODEC = StreamCodec.composite(
+        public static StreamCodec<RegistryFriendlyByteBuf, RequestWaypoint> STREAM_CODEC = StreamCodec.composite(
                 Vec3.STREAM_CODEC, RequestWaypoint::waypoint,
                 RequestWaypoint::new
         );
 
         @Override
-        public StreamCodec<ByteBuf, ? extends C2SPacket> streamCodec() {
+        public StreamCodec<RegistryFriendlyByteBuf, ? extends C2SPacket> streamCodec() {
             return STREAM_CODEC;
         }
     }
@@ -61,18 +56,32 @@ public sealed interface C2SPacket {
     record RequestMessage(
             String message
     ) implements C2SPacket {
-        public static StreamCodec<ByteBuf, RequestMessage> STREAM_CODEC = StreamCodec.composite(
+        public static StreamCodec<RegistryFriendlyByteBuf, RequestMessage> STREAM_CODEC = StreamCodec.composite(
                 ByteBufCodecs.STRING_UTF8, RequestMessage::message,
                 RequestMessage::new
         );
 
         @Override
-        public StreamCodec<ByteBuf, ? extends C2SPacket> streamCodec() {
+        public StreamCodec<RegistryFriendlyByteBuf, ? extends C2SPacket> streamCodec() {
             return STREAM_CODEC;
         }
     }
 
-    static StreamCodec<ByteBuf, ? extends C2SPacket> bootStrap(WritableRegistry<StreamCodec<ByteBuf, ? extends C2SPacket>> registry) {
+    record UpdateStatus(
+            MemberStatus status
+    ) implements C2SPacket {
+        public static StreamCodec<RegistryFriendlyByteBuf, UpdateStatus> STREAM_CODEC = StreamCodec.composite(
+                MemberStatus.STREAM_CODEC, UpdateStatus::status,
+                UpdateStatus::new
+        );
+
+        @Override
+        public StreamCodec<RegistryFriendlyByteBuf, ? extends C2SPacket> streamCodec() {
+            return STREAM_CODEC;
+        }
+    }
+
+    static StreamCodec<RegistryFriendlyByteBuf, ? extends C2SPacket> bootStrap(WritableRegistry<StreamCodec<RegistryFriendlyByteBuf, ? extends C2SPacket>> registry) {
         registry.register(
                 ResourceKey.create(ExtRegistries.C2S_MESSAGES, ResourceLocation.withDefaultNamespace("client_data")),
                 C2SClientDataPacket.STREAM_CODEC,
@@ -86,6 +95,11 @@ public sealed interface C2SPacket {
         registry.register(
                 ResourceKey.create(ExtRegistries.C2S_MESSAGES, ResourceLocation.withDefaultNamespace("request_message")),
                 RequestMessage.STREAM_CODEC,
+                RegistrationInfo.BUILT_IN
+        );
+        registry.register(
+                ResourceKey.create(ExtRegistries.C2S_MESSAGES, ResourceLocation.withDefaultNamespace("update_log_count")),
+                UpdateStatus.STREAM_CODEC,
                 RegistrationInfo.BUILT_IN
         );
         return C2SClientDataPacket.STREAM_CODEC;

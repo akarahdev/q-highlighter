@@ -2,6 +2,7 @@ package dev.akarah.qh.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import dev.akarah.qh.Main;
 import dev.akarah.qh.client.data.SweepData;
 import dev.akarah.qh.client.net.ClientImpl;
 import dev.akarah.qh.client.render.RenderColor;
@@ -19,14 +20,18 @@ import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ARGB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Vector3i;
 import org.lwjgl.glfw.GLFW;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class MainClient implements ClientModInitializer {
@@ -41,6 +46,8 @@ public class MainClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        Main.ACCESS = new ClientVirtualAccess();
+
         MainClient.waypointRaytraceKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
                 "key.qhighlighter.waypoint.raytrace",
                 InputConstants.Type.KEYSYM,
@@ -87,13 +94,6 @@ public class MainClient implements ClientModInitializer {
                                             })
                                     )
                             )
-                    ).then(
-                            ClientCommandManager.literal("list").executes(ctx -> {
-                                MainClient.netClient().map(ClientImpl::state).ifPresent(state -> {
-                                    ctx.getSource().sendFeedback(Component.literal(state.groupMembers().toString()));
-                                });
-                                return 0;
-                            })
                     ).then(
                             ClientCommandManager.literal("chat").then(
                                     ClientCommandManager.argument("message", StringArgumentType.greedyString()).executes(ctx -> {
@@ -165,6 +165,85 @@ public class MainClient implements ClientModInitializer {
                 ResourceLocation.parse("qhighlighter:e"),
                 (context, tickCounter) -> {
                     MainClient.sweepData().render(context, tickCounter);
+                }
+        );
+
+        HudElementRegistry.attachElementBefore(
+                VanillaHudElements.CHAT,
+                ResourceLocation.parse("qhighlighter:f"),
+                (graphics, tickCounter) -> {
+                    try {
+                        MainClient.netClient().ifPresent(netClient -> {
+                            var components = new ArrayList<Component>();
+                            netClient.state().groupMembers().with(groupMembers -> {
+                                for(var member : groupMembers) {
+                                    components.add(
+                                            Component.literal(member.username())
+                                                    .withColor(ARGB.color(255, 133, 255, 133))
+                                    );
+                                    components.add(
+                                            Component.literal("(uuid: " + member.uuid() + ")")
+                                                    .withColor(ARGB.color(255, 80, 80, 80))
+                                    );
+                                    member.memberStatus().ifPresent(memberStatus -> {
+                                        components.add(Component.empty());
+
+                                        components.add(
+                                                Component.literal("Logs per break: ")
+                                                        .withColor(ARGB.color(255, 133, 133, 133))
+                                                        .append(
+                                                                Component.literal(String.valueOf(memberStatus.logs()))
+                                                                        .withColor(ARGB.color(255, 0, 255, 0))
+                                                        )
+                                        );
+
+                                        var coordinates = new Vec3i(
+                                                (int) memberStatus.coordinates().x,
+                                                (int) memberStatus.coordinates().y,
+                                                (int) memberStatus.coordinates().z
+                                        );
+                                        components.add(
+                                                Component.literal("Coordinates: ")
+                                                        .withColor(ARGB.color(255, 133, 133, 133))
+                                                        .append(
+                                                                Component.literal(coordinates.toShortString())
+                                                                        .withColor(ARGB.color(255, 0, 255, 0))
+                                                        )
+                                        );
+
+                                        components.add(
+                                                Component.literal("Equipment:")
+                                                        .withColor(ARGB.color(255, 133, 133, 133))
+                                        );
+
+                                        memberStatus.equipment().stream().forEach(component -> components.add(
+                                                Component.literal(" - ")
+                                                        .withColor(ARGB.color(255, 80, 80, 80))
+                                                        .append(component)
+                                        ));
+
+                                    });
+                                    components.add(Component.empty());
+                                }
+
+                                var font = Minecraft.getInstance().font;
+                                for(int i = 0; i < components.size(); i++) {
+                                    var component = components.get(i);
+                                    graphics.drawString(
+                                            font,
+                                            component,
+                                            10,
+                                            (i * font.lineHeight) + 10,
+                                            new RenderColor(255, 255, 0, 0).argb()
+                                    );
+                                }
+                            });
+                        });
+                    } catch (Exception e) {
+                        // this is needed since minecraft is silly and equipment isn't always available
+                        // in order for this to work we need non-null component contents so
+                        // if a component is somehow null just... don't render ig
+                    }
                 }
         );
     }

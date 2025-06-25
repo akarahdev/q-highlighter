@@ -44,7 +44,7 @@ public class ServerImpl extends WebSocketServer {
         if (data == null) {
             return;
         }
-        this.state.removeFromGroup(data.groupName(), data.uuid());
+        this.state.removeFromGroup(data.groupName(), data.memberData());
     }
 
     @Override

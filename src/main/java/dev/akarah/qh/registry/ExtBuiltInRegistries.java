@@ -6,11 +6,12 @@ import dev.akarah.qh.packets.S2CPacket;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.DefaultedMappedRegistry;
 import net.minecraft.core.WritableRegistry;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 
 public class ExtBuiltInRegistries {
-    public static WritableRegistry<StreamCodec<ByteBuf, ? extends C2SPacket>> C2S_MESSAGES;
-    public static WritableRegistry<StreamCodec<ByteBuf, ? extends S2CPacket>> S2C_MESSAGES;
+    public static WritableRegistry<StreamCodec<RegistryFriendlyByteBuf, ? extends C2SPacket>> C2S_MESSAGES;
+    public static WritableRegistry<StreamCodec<RegistryFriendlyByteBuf, ? extends S2CPacket>> S2C_MESSAGES;
 
     public static void bootStrap() {
         C2S_MESSAGES = new DefaultedMappedRegistry<>(
