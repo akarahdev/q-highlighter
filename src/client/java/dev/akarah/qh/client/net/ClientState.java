@@ -1,5 +1,6 @@
 package dev.akarah.qh.client.net;
 
+import dev.akarah.qh.util.Locked;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
@@ -8,7 +9,7 @@ import java.util.UUID;
 
 public class ClientState {
     List<UUID> groupMembers = new ArrayList<>();
-    List<Vec3> waypoints = new ArrayList<>();
+    Locked<List<Vec3>> waypoints = Locked.of(new ArrayList<>());
 
     public List<UUID> groupMembers() {
         return groupMembers;
@@ -18,11 +19,11 @@ public class ClientState {
         this.groupMembers = groupMembers;
     }
 
-    public List<Vec3> waypoints() {
+    public Locked<List<Vec3>> waypoints() {
         return this.waypoints;
     }
 
     public void waypoints(List<Vec3> waypoints) {
-        this.waypoints = waypoints;
+        this.waypoints.set(waypoints);
     }
 }

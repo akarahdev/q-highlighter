@@ -1,7 +1,7 @@
 package dev.akarah.qh.server;
 
 import dev.akarah.qh.Main;
-import dev.akarah.qh.Util;
+import dev.akarah.qh.util.Util;
 import dev.akarah.qh.packets.C2SPacket;
 import io.netty.buffer.Unpooled;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -19,6 +19,10 @@ public class ServerImpl extends WebSocketServer {
     int idIndex = 0;
     ServerState state;
 
+    public S2CEntity createEntity(WebSocket conn) {
+        return new S2CEntity(conn, this.state);
+    }
+
     public ServerImpl() throws UnknownHostException {
         super(new InetSocketAddress(InetAddress.getByAddress(new byte[]{0, 0, 0, 0}), Util.PORT));
         this.state = new ServerState(this);
@@ -35,7 +39,7 @@ public class ServerImpl extends WebSocketServer {
 
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-        var entity = new S2CEntity(conn, this.state);
+        var entity = createEntity(conn);
         var data = entity.clientData();
         if (data == null) {
             return;
@@ -55,7 +59,7 @@ public class ServerImpl extends WebSocketServer {
                 Main.getRegistryAccess()
         );
         var packet = C2SPacket.STREAM_CODEC.decode(byteBuf);
-        new S2CEntity(conn, this.state).handlePacket(packet);
+        this.createEntity(conn).handlePacket(packet);
     }
 
     @Override
@@ -71,7 +75,7 @@ public class ServerImpl extends WebSocketServer {
     public List<S2CEntity> entities() {
         return this.getConnections()
                 .stream()
-                .map(x -> new S2CEntity(x, this.state))
+                .map(this::createEntity)
                 .toList();
     }
 }

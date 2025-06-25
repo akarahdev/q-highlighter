@@ -1,4 +1,4 @@
-package dev.akarah.qh;
+package dev.akarah.qh.util;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

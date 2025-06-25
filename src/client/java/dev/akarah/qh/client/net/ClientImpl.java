@@ -1,7 +1,7 @@
 package dev.akarah.qh.client.net;
 
 import dev.akarah.qh.Main;
-import dev.akarah.qh.Util;
+import dev.akarah.qh.util.Util;
 import dev.akarah.qh.packets.C2SPacket;
 import dev.akarah.qh.packets.S2CPacket;
 import io.netty.buffer.Unpooled;
@@ -13,11 +13,16 @@ import org.java_websocket.handshake.ServerHandshake;
 
 import java.net.URI;
 import java.nio.ByteBuffer;
+import java.util.Optional;
 
 public class ClientImpl extends WebSocketClient {
     ClientState clientState = new ClientState();
     C2SEntity entity = new C2SEntity(this, this.clientState);
     String groupName;
+
+    public C2SEntity entity() {
+        return entity;
+    }
 
     public ClientImpl(URI serverUri, String groupName) {
         super(serverUri);

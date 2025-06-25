@@ -16,9 +16,10 @@ public abstract class EntityMixin {
 
     @Inject(at = @At("HEAD"), method = "isCurrentlyGlowing", cancellable = true)
     public void glowInjection(CallbackInfoReturnable<Boolean> cir) {
-        if(MainClient.netClient() != null
-        && MainClient.netClient().state().groupMembers().contains(this.getUUID())) {
-            cir.setReturnValue(true);
-        }
+        MainClient.netClient().ifPresent(client -> {
+            if(client.state().groupMembers().contains(this.getUUID())) {
+                cir.setReturnValue(true);
+            }
+        });
     }
 }

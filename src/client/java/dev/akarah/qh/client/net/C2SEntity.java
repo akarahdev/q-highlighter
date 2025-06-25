@@ -1,6 +1,7 @@
 package dev.akarah.qh.client.net;
 
 import dev.akarah.qh.Main;
+import dev.akarah.qh.client.ClientUtil;
 import dev.akarah.qh.packets.C2SPacket;
 import dev.akarah.qh.packets.S2CPacket;
 import io.netty.buffer.Unpooled;
@@ -22,7 +23,11 @@ public record C2SEntity(
                 Main.getRegistryAccess()
         );
         C2SPacket.STREAM_CODEC.encode(buf, message);
-        this.conn.send(buf.nioBuffer());
+        try {
+            this.conn.send(buf.nioBuffer());
+        } catch (Exception ignored) {
+
+        }
     }
 
     public void handlePacket(S2CPacket message) {
@@ -31,32 +36,30 @@ public record C2SEntity(
                 this.state().groupMembers(groupInfoPacket.clients());
             }
             case S2CPacket.RegisterWaypointPacket registerWaypointPacket -> {
-                synchronized (this.state.waypoints()) {
-                    this.state().waypoints().add(registerWaypointPacket.waypoint());
-                }
-                if(Minecraft.getInstance().player == null) {
-                    return;
-                }
-                Minecraft.getInstance().player.displayClientMessage(Component.literal(registerWaypointPacket.registrar() + " registered waypoint at " + registerWaypointPacket.waypoint()), false);
-                assert Minecraft.getInstance().level != null;
-                Minecraft.getInstance().level.playSound(
-                        Minecraft.getInstance().player,
-                        new BlockPos(
-                                (int) Minecraft.getInstance().player.position().x,
-                                (int) Minecraft.getInstance().player.position().y,
-                                (int) Minecraft.getInstance().player.position().z
-                        ),
-                        SoundType.AMETHYST.getBreakSound(),
-                        SoundSource.MASTER
-                );
+                this.state().waypoints().with(x -> x.add(registerWaypointPacket.waypoint()));
+
+                ClientUtil.localPlayer().ifPresent(localPlayer -> {
+                    localPlayer.displayClientMessage(Component.literal(registerWaypointPacket.registrar() + " registered waypoint at " + registerWaypointPacket.waypoint()), false);
+                    localPlayer.level().playSound(
+                            localPlayer,
+                            new BlockPos(
+                                    (int) localPlayer.position().x,
+                                    (int) localPlayer.position().y,
+                                    (int) localPlayer.position().z
+                            ),
+                            SoundType.AMETHYST.getBreakSound(),
+                            SoundSource.MASTER
+                    );
+                });
             }
             case S2CPacket.ChatMessagePacket chatMessagePacket -> {
-                assert Minecraft.getInstance().player != null;
-                Minecraft.getInstance().player.displayClientMessage(
-                        Component.empty()
-                                .append(Component.literal(chatMessagePacket.username()))
-                                .append(Component.literal(" >> "))
-                                .append(Component.literal(chatMessagePacket.message())), false);
+                ClientUtil.localPlayer().ifPresent(localPlayer -> {
+                    localPlayer.displayClientMessage(
+                            Component.empty()
+                                    .append(Component.literal(chatMessagePacket.username()))
+                                    .append(Component.literal(" >> "))
+                                    .append(Component.literal(chatMessagePacket.message())), false);
+                });
             }
         }
     }

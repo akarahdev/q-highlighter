@@ -5,7 +5,6 @@ import dev.akarah.qh.packets.C2SPacket;
 import dev.akarah.qh.packets.S2CPacket;
 import io.netty.buffer.Unpooled;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.server.MinecraftServer;
 import org.java_websocket.WebSocket;
 
 public record S2CEntity(
@@ -18,7 +17,11 @@ public record S2CEntity(
                 Main.getRegistryAccess()
         );
         S2CPacket.STREAM_CODEC.encode(buf, message);
-        Thread.startVirtualThread(() -> this.conn.send(buf.nioBuffer()));
+        try {
+            this.conn.send(buf.nioBuffer());
+        } catch (Exception ignored) {
+
+        }
     }
 
     public void clientData(C2SPacket.C2SClientDataPacket packet) {

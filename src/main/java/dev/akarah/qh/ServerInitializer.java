@@ -1,6 +1,7 @@
 package dev.akarah.qh;
 
 import dev.akarah.qh.server.ServerImpl;
+import dev.akarah.qh.util.Util;
 import net.fabricmc.api.DedicatedServerModInitializer;
 
 import java.net.UnknownHostException;
