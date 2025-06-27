@@ -19,11 +19,15 @@ import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.ARGB;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3i;
@@ -150,6 +154,14 @@ public class MainClient implements ClientModInitializer {
                     });
         });
 
+        var phantomSounds = List.of(
+                ResourceLocation.withDefaultNamespace("entity.phantom.ambient"),
+                ResourceLocation.withDefaultNamespace("entity.phantom.flap"),
+                ResourceLocation.withDefaultNamespace("entity.phantom.hurt"),
+                ResourceLocation.withDefaultNamespace("entity.phantom.death"),
+                ResourceLocation.withDefaultNamespace("entity.phantom.swoop"),
+                ResourceLocation.withDefaultNamespace("entity.phantom.bitr")
+        );
         ClientTickEvents.END_CLIENT_TICK.register(minecraft -> {
             if (minecraft.cameraEntity != null) {
                 while (waypointRaytraceKey.consumeClick()) {
@@ -157,6 +169,12 @@ public class MainClient implements ClientModInitializer {
                     MainClient.netClient().ifPresent(netClient ->
                             netClient.entity().writePacket(new C2SPacket.RequestWaypoint(hit.getLocation())));
                 }
+            }
+            for(var sound : phantomSounds) {
+                minecraft.getSoundManager().stop(
+                        sound,
+                        SoundSource.MASTER
+                );
             }
         });
 
