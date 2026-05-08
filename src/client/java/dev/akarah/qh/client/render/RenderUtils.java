@@ -1,19 +1,15 @@
 package dev.akarah.qh.client.render;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
-import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.RenderType;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import net.minecraft.client.renderer.ShapeRenderer;
+import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.util.ARGB;
-import net.minecraft.util.ColorRGBA;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import org.lwjgl.opengl.GL11;
-
-import java.util.Objects;
 
 // This code was adapted from Skyblocker.
 // - Refactored to fit this mod's needs
@@ -23,7 +19,7 @@ import java.util.Objects;
 // https://github.com/SkyblockerMod/Skyblocker/
 public class RenderUtils {
     public static void renderShape(
-            WorldRenderContext ctx,
+            LevelRenderContext ctx,
             VoxelShape voxelShape,
             RenderType renderType,
             double x,
@@ -31,17 +27,14 @@ public class RenderUtils {
             double z,
             RenderColor color
     ) {
-        var poseStack = ctx.matrixStack();
-        assert poseStack != null;
+        var poseStack = ctx.poseStack();
 
-        var camera = ctx.camera().getPosition();
+        var camera = ctx.gameRenderer().getMainCamera().position();
 
         poseStack.pushPose();
         poseStack.translate(camera.multiply(-1.0, -1.0, -1.0));
 
-        var consumers = ctx.consumers();
-        assert consumers != null;
-        var consumer = consumers.getBuffer(renderType);
+        var consumer = ctx.bufferSource().getBuffer(renderType);
 
         ShapeRenderer.renderShape(
                 poseStack,
@@ -50,73 +43,80 @@ public class RenderUtils {
                 x,
                 y,
                 z,
-                color.argb()
+                color.argb(),
+                1
         );
 
         poseStack.popPose();
     }
 
     public static void renderBox(
-            WorldRenderContext ctx,
+            LevelRenderContext ctx,
             Vec3 c1,
             Vec3 c2,
             RenderColor argbColor
     ) {
-        var poseStack = ctx.matrixStack();
-        assert poseStack != null;
+        var poseStack = ctx.poseStack();
 
-        var camera = ctx.camera().getPosition();
+        var camera = ctx.gameRenderer().getMainCamera().position();
 
         poseStack.pushPose();
         poseStack.translate(camera.multiply(-1.0, -1.0, -1.0));
 
-        var consumers = ctx.consumers();
-        assert consumers != null;
-        var consumer = consumers.getBuffer(RenderTypes.FILLED_THROUGH_WALLS);
+        var consumer = ctx.bufferSource().getBuffer(ExtRenderTypes.FILLED_THROUGH_WALLS);
 
-        ShapeRenderer.addChainedFilledBoxVertices(
+        ShapeRenderer.renderShape(
                 poseStack,
                 consumer,
+                Shapes.box(
+                        0,
+                        0,
+                        0,
+                        c2.x - c1.x,
+                        c2.y - c1.y,
+                        c2.z - c1.z
+                ),
                 c1.x,
                 c1.y,
                 c1.z,
-                c2.x,
-                c2.y,
-                c2.z,
-                argbColor.redFloat(),
-                argbColor.blueFloat(),
-                argbColor.greenFloat(),
-                argbColor.alphaFloat()
+                ARGB.colorFromFloat(
+                        argbColor.alphaFloat(),
+                        argbColor.redFloat(),
+                        argbColor.blueFloat(),
+                        argbColor.greenFloat()
+                ),
+                1
         );
 
         poseStack.popPose();
     }
 
     public static void renderLine(
-            WorldRenderContext ctx,
+            LevelRenderContext ctx,
             Vec3 c1,
             Vec3 c2,
             RenderColor color
     ) {
-        var poseStack = ctx.matrixStack();
-        assert poseStack != null;
+        var consumer = ctx.bufferSource().getBuffer(RenderTypes.LINES_TRANSLUCENT);
 
-        var camera = ctx.camera().getPosition();
+        var camera = ctx.gameRenderer().getMainCamera().position();
 
-        poseStack.pushPose();
-        poseStack.translate(camera.multiply(-1.0, -1.0, -1.0));
+        Matrix4f positionMatrix = new Matrix4f()
+                .translate((float) -camera.x, (float) -camera.y, (float) -camera.z);
 
-        var consumer = Objects.requireNonNull(ctx.consumers()).getBuffer(RenderType.LINES);
+        // Calculate normal vector from line direction
+        Vector3f normal = c2.toVector3f()
+                .sub((float) c1.x, (float) c1.y, (float) c1.z)
+                .normalize();
 
-        var between = c1.subtract(c2);
-        ShapeRenderer.renderVector(
-                poseStack,
-                consumer,
-                c1.toVector3f(),
-                between.multiply(-1, -1, -1),
-                color.argb()
-        );
+        consumer.addVertex(positionMatrix, (float) c1.x, (float) c1.y, (float) c1.z)
+                .setColor(color.redFloat(), color.greenFloat(), color.blueFloat(), color.alphaFloat())
+                .setNormal(normal.x(), normal.y(), normal.z())
+                .setLineWidth(1);
 
-        poseStack.popPose();
+        consumer.addVertex(positionMatrix, (float) c2.x, (float) c2.y, (float) c2.z)
+                .setColor(color.redFloat(), color.greenFloat(), color.blueFloat(), color.alphaFloat())
+                .setNormal(normal.x(), normal.y(), normal.z())
+                .setLineWidth(1);
     }
 }

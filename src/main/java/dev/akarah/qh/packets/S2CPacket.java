@@ -7,8 +7,8 @@ import net.minecraft.core.WritableRegistry;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
@@ -72,17 +72,17 @@ public sealed interface S2CPacket {
 
     static StreamCodec<RegistryFriendlyByteBuf, ? extends S2CPacket> bootStrap(WritableRegistry<StreamCodec<RegistryFriendlyByteBuf, ? extends S2CPacket>> registry) {
         registry.register(
-                ResourceKey.create(ExtRegistries.S2C_MESSAGES, ResourceLocation.withDefaultNamespace("group_info")),
+                ResourceKey.create(ExtRegistries.S2C_MESSAGES, Identifier.withDefaultNamespace("group_info")),
                 GroupInfoPacket.STREAM_CODEC,
                 RegistrationInfo.BUILT_IN
         );
         registry.register(
-                ResourceKey.create(ExtRegistries.S2C_MESSAGES, ResourceLocation.withDefaultNamespace("register_waypoint")),
+                ResourceKey.create(ExtRegistries.S2C_MESSAGES, Identifier.withDefaultNamespace("register_waypoint")),
                 RegisterWaypointPacket.STREAM_CODEC,
                 RegistrationInfo.BUILT_IN
         );
         registry.register(
-                ResourceKey.create(ExtRegistries.S2C_MESSAGES, ResourceLocation.withDefaultNamespace("chat_message")),
+                ResourceKey.create(ExtRegistries.S2C_MESSAGES, Identifier.withDefaultNamespace("chat_message")),
                 ChatMessagePacket.STREAM_CODEC,
                 RegistrationInfo.BUILT_IN
         );

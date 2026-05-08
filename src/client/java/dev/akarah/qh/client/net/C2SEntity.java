@@ -39,7 +39,7 @@ public record C2SEntity(
                 this.state().waypoints().with(x -> x.add(registerWaypointPacket.waypoint()));
 
                 ClientUtil.localPlayer().ifPresent(localPlayer -> {
-                    localPlayer.displayClientMessage(Component.literal(registerWaypointPacket.registrar() + " registered waypoint at " + registerWaypointPacket.waypoint()), false);
+                    localPlayer.sendSystemMessage(Component.literal(registerWaypointPacket.registrar() + " registered waypoint at " + registerWaypointPacket.waypoint()));
                     localPlayer.level().playSound(
                             localPlayer,
                             new BlockPos(
@@ -54,11 +54,11 @@ public record C2SEntity(
             }
             case S2CPacket.ChatMessagePacket chatMessagePacket -> {
                 ClientUtil.localPlayer().ifPresent(localPlayer -> {
-                    localPlayer.displayClientMessage(
+                    localPlayer.sendSystemMessage(
                             Component.empty()
                                     .append(Component.literal(chatMessagePacket.username()))
                                     .append(Component.literal(" >> "))
-                                    .append(Component.literal(chatMessagePacket.message())), false);
+                                    .append(Component.literal(chatMessagePacket.message())));
                 });
             }
         }

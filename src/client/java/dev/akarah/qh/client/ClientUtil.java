@@ -15,6 +15,6 @@ public class ClientUtil {
     }
 
     public static Optional<ClientLevel> level() {
-        return localPlayer().map(x -> x.clientLevel);
+        return localPlayer().map(x -> (ClientLevel) x.level());
     }
 }

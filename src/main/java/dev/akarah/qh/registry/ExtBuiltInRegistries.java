@@ -15,14 +15,14 @@ public class ExtBuiltInRegistries {
 
     public static void bootStrap() {
         C2S_MESSAGES = new DefaultedMappedRegistry<>(
-                ExtRegistries.C2S_MESSAGES.location().toString(),
+                ExtRegistries.C2S_MESSAGES.identifier().toString(),
                 ExtRegistries.C2S_MESSAGES,
                 Lifecycle.stable(),
                 false
         );
         C2SPacket.bootStrap(C2S_MESSAGES);
         S2C_MESSAGES = new DefaultedMappedRegistry<>(
-                ExtRegistries.S2C_MESSAGES.location().toString(),
+                ExtRegistries.S2C_MESSAGES.identifier().toString(),
                 ExtRegistries.S2C_MESSAGES,
                 Lifecycle.stable(),
                 false

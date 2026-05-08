@@ -7,7 +7,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.function.Function;
@@ -83,22 +83,22 @@ public sealed interface C2SPacket {
 
     static StreamCodec<RegistryFriendlyByteBuf, ? extends C2SPacket> bootStrap(WritableRegistry<StreamCodec<RegistryFriendlyByteBuf, ? extends C2SPacket>> registry) {
         registry.register(
-                ResourceKey.create(ExtRegistries.C2S_MESSAGES, ResourceLocation.withDefaultNamespace("client_data")),
+                ResourceKey.create(ExtRegistries.C2S_MESSAGES, Identifier.withDefaultNamespace("client_data")),
                 C2SClientDataPacket.STREAM_CODEC,
                 RegistrationInfo.BUILT_IN
         );
         registry.register(
-                ResourceKey.create(ExtRegistries.C2S_MESSAGES, ResourceLocation.withDefaultNamespace("request_waypoint")),
+                ResourceKey.create(ExtRegistries.C2S_MESSAGES, Identifier.withDefaultNamespace("request_waypoint")),
                 RequestWaypoint.STREAM_CODEC,
                 RegistrationInfo.BUILT_IN
         );
         registry.register(
-                ResourceKey.create(ExtRegistries.C2S_MESSAGES, ResourceLocation.withDefaultNamespace("request_message")),
+                ResourceKey.create(ExtRegistries.C2S_MESSAGES, Identifier.withDefaultNamespace("request_message")),
                 RequestMessage.STREAM_CODEC,
                 RegistrationInfo.BUILT_IN
         );
         registry.register(
-                ResourceKey.create(ExtRegistries.C2S_MESSAGES, ResourceLocation.withDefaultNamespace("update_log_count")),
+                ResourceKey.create(ExtRegistries.C2S_MESSAGES, Identifier.withDefaultNamespace("update_log_count")),
                 UpdateStatus.STREAM_CODEC,
                 RegistrationInfo.BUILT_IN
         );

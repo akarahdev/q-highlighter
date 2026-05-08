@@ -1,15 +1,10 @@
 package dev.akarah.qh.client.data;
 
-import dev.akarah.qh.client.ClientUtil;
-import dev.akarah.qh.client.MainClient;
 import dev.akarah.qh.client.render.RenderColor;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.font.FontSet;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ARGB;
 
 import java.util.ArrayList;
@@ -34,7 +29,7 @@ public record SweepData(
 
     }
 
-    public void render(GuiGraphics graphics, DeltaTracker deltaTracker) {
+    public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
         var font = Minecraft.getInstance().font;
 
         var components = new ArrayList<Component>();
@@ -87,7 +82,7 @@ public record SweepData(
 
         for(int i = 0; i < components.size(); i++) {
             var component = components.get(i);
-            graphics.drawString(
+            graphics.text(
                     font,
                     component,
                     (graphics.guiWidth() - maxLength * 8),

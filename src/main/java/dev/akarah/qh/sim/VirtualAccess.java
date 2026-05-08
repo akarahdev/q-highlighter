@@ -23,7 +23,9 @@ public class VirtualAccess implements RegistryAccess {
             return Optional.of((Registry<E>) ExtBuiltInRegistries.C2S_MESSAGES);
         }
 
-        return (Optional<Registry<E>>) BuiltInRegistries.REGISTRY.get(resourceKey.location()).map(Holder.Reference::value);
+        return (Optional<Registry<E>>) BuiltInRegistries.REGISTRY
+                .get(resourceKey.identifier())
+                .map(Holder.Reference::value);
     }
 
     @Override

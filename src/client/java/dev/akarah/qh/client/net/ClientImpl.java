@@ -44,8 +44,8 @@ public class ClientImpl extends WebSocketClient {
         }
         this.entity.writePacket(new C2SPacket.C2SClientDataPacket(
                 new GroupMember(
-                        player.getGameProfile().getName(),
-                        player.getGameProfile().getId(),
+                        player.getGameProfile().name(),
+                        player.getGameProfile().id(),
                         Optional.empty()
                 ),
                 this.groupName,
@@ -80,7 +80,7 @@ public class ClientImpl extends WebSocketClient {
                 .player != null;
         Minecraft.getInstance()
                 .player
-                .displayClientMessage(Component.literal(ex.getMessage()), false);
+                .sendSystemMessage(Component.literal(ex.getMessage()));
     }
 
     public ClientState state() {

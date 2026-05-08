@@ -10,13 +10,13 @@ import dev.akarah.qh.client.render.RenderUtils;
 import dev.akarah.qh.packets.C2SPacket;
 import dev.akarah.qh.util.Util;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SoundInstance;
@@ -24,7 +24,7 @@ import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.ARGB;
 import net.minecraft.world.level.block.SoundType;
@@ -36,6 +36,7 @@ import org.lwjgl.glfw.GLFW;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public class MainClient implements ClientModInitializer {
@@ -52,18 +53,18 @@ public class MainClient implements ClientModInitializer {
     public void onInitializeClient() {
         Main.ACCESS = new ClientVirtualAccess();
 
-        MainClient.waypointRaytraceKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+        MainClient.waypointRaytraceKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.qhighlighter.waypoint.raytrace",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_V,
-                "category.qhighlighter.waypoint"
+                KeyMapping.Category.GAMEPLAY
         ));
         ClientCommandRegistrationCallback.EVENT.register(((dispatcher, context) -> {
             dispatcher.register(
-                    ClientCommandManager.literal("qh").then(
-                            ClientCommandManager.literal("join-group").then(
-                                    ClientCommandManager.argument("uri", StringArgumentType.string()).then(
-                                            ClientCommandManager.argument("code", StringArgumentType.string()).executes(ctx -> {
+                    ClientCommands.literal("qh").then(
+                            ClientCommands.literal("join-group").then(
+                                    ClientCommands.argument("uri", StringArgumentType.string()).then(
+                                            ClientCommands.argument("code", StringArgumentType.string()).executes(ctx -> {
                                                 var uri = ctx.getArgument("uri", String.class);
                                                 var code = ctx.getArgument("code", String.class);
                                                 if (!uri.contains(":")) {
@@ -99,8 +100,8 @@ public class MainClient implements ClientModInitializer {
                                     )
                             )
                     ).then(
-                            ClientCommandManager.literal("chat").then(
-                                    ClientCommandManager.argument("message", StringArgumentType.greedyString()).executes(ctx -> {
+                            ClientCommands.literal("chat").then(
+                                    ClientCommands.argument("message", StringArgumentType.greedyString()).executes(ctx -> {
                                         MainClient.netClient().map(ClientImpl::entity).ifPresent(entity -> {
                                             entity.writePacket(new C2SPacket.RequestMessage(
                                                     ctx.getArgument("message", String.class)
@@ -113,7 +114,7 @@ public class MainClient implements ClientModInitializer {
             );
         }));
 
-        WorldRenderEvents.AFTER_ENTITIES.register(ctx -> {
+        LevelRenderEvents.AFTER_TRANSLUCENT_FEATURES.register(ctx -> {
             ClientUtil.localPlayer()
                     .ifPresent(p -> {
                         netClient().map(ClientImpl::state)
@@ -130,8 +131,8 @@ public class MainClient implements ClientModInitializer {
                                         ClientUtil.localPlayer().ifPresent(localPlayer -> {
                                             RenderUtils.renderLine(
                                                     ctx,
-                                                    ctx.gameRenderer().getMainCamera().getPosition()
-                                                            .add(new Vec3(ctx.gameRenderer().getMainCamera().getLookVector())),
+                                                    ctx.gameRenderer().getMainCamera().position()
+                                                            .add(new Vec3(ctx.gameRenderer().getMainCamera().forwardVector())),
                                                     waypoint,
                                                     new RenderColor(255, 255, 0, 0)
                                             );
@@ -155,17 +156,17 @@ public class MainClient implements ClientModInitializer {
         });
 
         var phantomSounds = List.of(
-                ResourceLocation.withDefaultNamespace("entity.phantom.ambient"),
-                ResourceLocation.withDefaultNamespace("entity.phantom.flap"),
-                ResourceLocation.withDefaultNamespace("entity.phantom.hurt"),
-                ResourceLocation.withDefaultNamespace("entity.phantom.death"),
-                ResourceLocation.withDefaultNamespace("entity.phantom.swoop"),
-                ResourceLocation.withDefaultNamespace("entity.phantom.bitr")
+                Identifier.withDefaultNamespace("entity.phantom.ambient"),
+                Identifier.withDefaultNamespace("entity.phantom.flap"),
+                Identifier.withDefaultNamespace("entity.phantom.hurt"),
+                Identifier.withDefaultNamespace("entity.phantom.death"),
+                Identifier.withDefaultNamespace("entity.phantom.swoop"),
+                Identifier.withDefaultNamespace("entity.phantom.bitr")
         );
         ClientTickEvents.END_CLIENT_TICK.register(minecraft -> {
-            if (minecraft.cameraEntity != null) {
+            if (minecraft.getCameraEntity() != null) {
                 while (waypointRaytraceKey.consumeClick()) {
-                    var hit = minecraft.cameraEntity.pick(5000, 1.0f, true);
+                    var hit = Objects.requireNonNull(minecraft.getCameraEntity()).pick(5000, 1.0f, true);
                     MainClient.netClient().ifPresent(netClient ->
                             netClient.entity().writePacket(new C2SPacket.RequestWaypoint(hit.getLocation())));
                 }
@@ -180,7 +181,7 @@ public class MainClient implements ClientModInitializer {
 
         HudElementRegistry.attachElementBefore(
                 VanillaHudElements.CHAT,
-                ResourceLocation.parse("qhighlighter:e"),
+                Identifier.parse("qhighlighter:e"),
                 (context, tickCounter) -> {
                     MainClient.sweepData().render(context, tickCounter);
                 }
@@ -188,7 +189,7 @@ public class MainClient implements ClientModInitializer {
 
         HudElementRegistry.attachElementBefore(
                 VanillaHudElements.CHAT,
-                ResourceLocation.parse("qhighlighter:f"),
+                Identifier.parse("qhighlighter:f"),
                 (graphics, tickCounter) -> {
                     try {
                         MainClient.netClient().ifPresent(netClient -> {
@@ -247,7 +248,7 @@ public class MainClient implements ClientModInitializer {
                                 var font = Minecraft.getInstance().font;
                                 for(int i = 0; i < components.size(); i++) {
                                     var component = components.get(i);
-                                    graphics.drawString(
+                                    graphics.text(
                                             font,
                                             component,
                                             10,
