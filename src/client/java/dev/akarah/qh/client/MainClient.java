@@ -119,25 +119,33 @@ public class MainClient implements ClientModInitializer {
                     .ifPresent(p -> {
                         netClient().map(ClientImpl::state)
                                 .ifPresent(state -> {
-                                    state.waypoints().with(waypoints -> waypoints.forEach(waypoint -> {
-                                        RenderUtils.renderBox(
-                                                ctx,
-                                                waypoint.add(-0.5, -0.5, -0.5),
-                                                waypoint.add(0.5, 0.5, 0.5),
-                                                new RenderColor(200, 255, 0, 0)
-                                        );
-
-
-                                        ClientUtil.localPlayer().ifPresent(localPlayer -> {
-                                            RenderUtils.renderLine(
+                                    state.waypoints().with(waypoints -> {
+                                        var lastPos = ctx.gameRenderer().getMainCamera().position()
+                                                .add(new Vec3(ctx.gameRenderer().getMainCamera().forwardVector()));
+                                        var color = 255;
+                                        for(var waypoint : waypoints) {
+                                            RenderUtils.renderBox(
                                                     ctx,
-                                                    ctx.gameRenderer().getMainCamera().position()
-                                                            .add(new Vec3(ctx.gameRenderer().getMainCamera().forwardVector())),
-                                                    waypoint,
-                                                    new RenderColor(255, 255, 0, 0)
+                                                    waypoint.add(-0.5, -0.5, -0.5),
+                                                    waypoint.add(0.5, 0.5, 0.5),
+                                                    new RenderColor(200, color, color, color)
                                             );
-                                        });
-                                    }));
+
+
+                                            int finalColor = color;
+                                            Vec3 finalLastPos = lastPos;
+                                            ClientUtil.localPlayer().ifPresent(localPlayer -> {
+                                                RenderUtils.renderLine(
+                                                        ctx,
+                                                        finalLastPos,
+                                                        waypoint,
+                                                        new RenderColor(200, finalColor, finalColor, finalColor)
+                                                );
+                                            });
+                                            lastPos = waypoint;
+                                            color /= 2;
+                                        }
+                                    });
 
                                     state.waypoints().map(x -> new ArrayList<>(x.stream()
                                             .filter(vec -> {
