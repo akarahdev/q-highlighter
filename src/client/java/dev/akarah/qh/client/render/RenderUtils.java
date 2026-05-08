@@ -95,7 +95,8 @@ public class RenderUtils {
             LevelRenderContext ctx,
             Vec3 c1,
             Vec3 c2,
-            RenderColor color
+            RenderColor color,
+            float width
     ) {
         var consumer = ctx.bufferSource().getBuffer(RenderTypes.LINES_TRANSLUCENT);
 
@@ -112,11 +113,11 @@ public class RenderUtils {
         consumer.addVertex(positionMatrix, (float) c1.x, (float) c1.y, (float) c1.z)
                 .setColor(color.redFloat(), color.greenFloat(), color.blueFloat(), color.alphaFloat())
                 .setNormal(normal.x(), normal.y(), normal.z())
-                .setLineWidth(1);
+                .setLineWidth(width);
 
         consumer.addVertex(positionMatrix, (float) c2.x, (float) c2.y, (float) c2.z)
                 .setColor(color.redFloat(), color.greenFloat(), color.blueFloat(), color.alphaFloat())
                 .setNormal(normal.x(), normal.y(), normal.z())
-                .setLineWidth(1);
+                .setLineWidth(width);
     }
 }

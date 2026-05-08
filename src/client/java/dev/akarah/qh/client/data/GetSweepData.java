@@ -9,7 +9,7 @@ import java.util.Optional;
 public class GetSweepData {
     public static boolean detectSweepDetailImpl(ClientboundSystemChatPacket par1) {
         if(par1.overlay()) {
-            return true;
+            return false;
         }
 
         var component = par1.content().getString().trim().replace("  ", "");

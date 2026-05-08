@@ -132,16 +132,20 @@ public class MainClient implements ClientModInitializer {
                                             );
 
 
-                                            int finalColor = color;
-                                            Vec3 finalLastPos = lastPos;
-                                            ClientUtil.localPlayer().ifPresent(localPlayer -> {
-                                                RenderUtils.renderLine(
-                                                        ctx,
-                                                        finalLastPos,
-                                                        waypoint,
-                                                        new RenderColor(200, finalColor, finalColor, finalColor)
-                                                );
-                                            });
+                                            RenderUtils.renderLine(
+                                                    ctx,
+                                                    lastPos,
+                                                    waypoint,
+                                                    new RenderColor(200, color, color, color),
+                                                    2
+                                            );
+                                            RenderUtils.renderLine(
+                                                    ctx,
+                                                    waypoint.add(0, 50, 0),
+                                                    waypoint.add(0, -50, 0),
+                                                    new RenderColor(200, color, color, color),
+                                                    3
+                                            );
                                             lastPos = waypoint;
                                             color /= 2;
                                         }
